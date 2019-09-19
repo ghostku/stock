@@ -19,7 +19,6 @@ def main():
     # 1 Загрузить данные
     for file in glob.glob(MORNING_DATA):
         one_day(file, os.path.join(EVENING_DATA_FOLDER, os.path.basename(file)))
-        exit(1)
 
 
 if __name__ == "__main__":

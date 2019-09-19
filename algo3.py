@@ -14,21 +14,19 @@ CSV_NA_VALUES = {
 
 
 class Algo:
-    __name__ = 'Y_b /Yra_qery'
-    GAP_SELL_PRICE = 250
-    GAP_BUY_PRICE = 15
+    __name__ = "Y_b /Yra_qery"
 
     DELTA_SELL = 0
     DELTA_BUY = 0
 
-    GAP_BUY_X3_1 = -0.5 + DELTA_BUY
-    GAP_SELL_X3_1 = 0.1 - DELTA_SELL
-    GAP_BUY_X3_2 = -2.5
-    GAP_SELL_X3_2 = 2.5
+    GAP_BUY_2 = -0.5 + DELTA_BUY
+    GAP_SELL_2 = 0.1 - DELTA_SELL
+    GAP_BUY_3 = -2.5
+    GAP_SELL_3 = 2.5
 
     def __init__(self, morning_data_file, evening_data_file):
-        def _rename_columns(prefix, data):
-            data.columns = [prefix + name for i, name in enumerate(data.columns)]
+        self.GAP_SELL_PRICE = 250
+        self.GAP_BUY_PRICE = 15
 
         self.morning = pd.read_csv(
             morning_data_file,
@@ -46,11 +44,10 @@ class Algo:
         )
         self.data = self.morning.join(self.evening, lsuffix="_m", rsuffix="_e")
         self.buy = None
-        self.sell = True
+        self.sell = None
 
     def _buy_filter(self, row):
-        # Volume
-        if (row.Volume_m < 500) or (row.Volume_m > 20000):
+        if not row["if"]:
             return False
         # Price
         if not (self.GAP_BUY_PRICE <= row.Close_m <= self.GAP_SELL_PRICE):
@@ -59,7 +56,7 @@ class Algo:
         if (row.Ask_m - row.Bid_m) * 100 / row.Close_m > 1:
             return False
         # Gap
-        if not (self.GAP_BUY_X3_2 <= row.GapBuy <= self.GAP_BUY_X3_1):
+        if not (self.GAP_BUY_3 <= row.GapBuy <= self.GAP_BUY_2):
             return False
         # Gap Day Before
         if row.Open_e <= 0:
@@ -68,10 +65,27 @@ class Algo:
             return False
         return True
 
-    def _sell_filter(self, row):
-        # Volume
-        if not (2000 < row.Volume_m < 20000):
+    def _buy_filter_1(self, row):
+        if not self._buy_filter(row):
             return False
+        # Volume
+        if (row.Volume_m < 500) or (row.Volume_m > 20000):
+            return False
+        return True
+
+    def _buy_filter_2(self, row):
+        if not self._buy_filter(row):
+            return False
+        # Volume
+        if row.Volume_m <= 500:
+            return False
+
+        return True
+
+    def _sell_filter(self, row):
+        if not row["if"]:
+            return False
+
         # Price
         if not (self.GAP_BUY_PRICE <= row.Close_m <= self.GAP_SELL_PRICE):
             return False
@@ -79,24 +93,39 @@ class Algo:
         if (row.Ask_m - row.Bid_m) * 100 / row.Close_m > 1:
             return False
         # Gap
-        if not (self.GAP_SELL_X3_1 <= row.GapSell <= self.GAP_SELL_X3_2):
+        if not (self.GAP_SELL_2 <= row.GapSell <= self.GAP_SELL_3):
             return False
         # Gap Day Before
         if row.Open_e <= 0:
             return False
+
+        return True
+
+    def _sell_filter_1(self, row):
+        if not self._sell_filter(row):
+            return False
+        # Volume
+        if not (2000 < row.Volume_m < 20000):
+            return False
+        # Gap Day Before
         if -2 < (row.AvgPrice - row.Open_e) * 100 / row.Open_e < 2:
+            return False
+        return True
+
+    def _sell_filter_2(self, row):
+        if not self._sell_filter(row):
+            return False
+        # Volume
+        if row.Volume_m <= 2000:
+            return False
+        # Gap Day Before
+        if -1.5 < (row.AvgPrice - row.Open_e) * 100 / row.Open_e < 2:
             return False
         return True
 
     def calculate(self):
 
-        VAL_HZ_5_6 = 0
-        VAL_HZ_2_1 = 0
-        VAL_HZ_2_4 = 0
-
-        VAL_HZ_1_3 = 1
-
-        self.data["if_1"] = self.data.apply(
+        self.data["if"] = self.data.apply(
             lambda x: x["Last_m"] > 1
             and x["Close_e"] > 0
             and x["Open_e"] > 0
@@ -111,13 +140,57 @@ class Algo:
         self.data["GapSell"] = (
             (self.data.Bid_m - self.data.Close_m) * 100 / self.data.Close_m
         )
+        self.data["Result"] = self.data.Close_m * self.data.Last_m / 1000
 
-        self.buy = self.data[self.data.apply(self._buy_filter, axis=1)]
-        self.sell = self.data[self.data.apply(self._sell_filter, axis=1)]
-    
+        count = 0
+        while count < 30:
+            count += 1
+            self.data["buy_f1"] = self.data.apply(self._buy_filter_1, axis=1)
+            self.data["sell_f1"] = self.data.apply(self._sell_filter_1, axis=1)
+            GAP_BUY_12 = self.GAP_BUY_2
+            GAP_BUY_13 = self.GAP_BUY_3
+            GAP_SELL_12 = self.GAP_SELL_2
+            GAP_SELL_13 = self.GAP_SELL_3
+            self.GAP_SELL_PRICE = 180
+            self.GAP_BUY_2 = -0.1 + self.DELTA_BUY
+            self.GAP_SELL_2 = 0.1 - self.DELTA_SELL
+            self.GAP_BUY_3 = -1.5 - (self.DELTA_BUY if self.DELTA_BUY > 0 else 0)
+            self.GAP_SELL_3 = 1.5 + (self.DELTA_SELL if self.DELTA_SELL > 0 else 0)
+
+            self.data["buy_f2"] = self.data.apply(self._buy_filter_2, axis=1)
+            self.data["sell_f2"] = self.data.apply(self._sell_filter_2, axis=1)
+
+            self.buy = self.data[
+                self.data.apply(lambda x: x.buy_f1 or x.buy_f2, axis=1)
+            ]
+            self.sell = self.data[
+                self.data.apply(lambda x: x.sell_f1 or x.sell_f2, axis=1)
+            ]
+
+            tmp_1 = (self.buy.sum()["Result"] - self.sell.sum()["Result"]) / (
+                self.buy.sum()["Result"] + self.sell.sum()["Result"]
+            )
+            buy_qnty = len(self.buy.index)
+            sell_qnty = len(self.sell.index)
+            return
+            if tmp_1 > 0.3:
+                if buy_qnty > 10:
+                    self.DELTA_BUY = self.DELTA_BUY - 0.05
+                    self.DELTA_SELL = self.DELTA_SELL + 0.05
+                else:
+                    self.DELTA_SELL = self.DELTA_SELL + 0.05
+            elif tmp_1 < -0.3:
+                if sell_qnty > 10:
+                    self.DELTA_BUY = self.DELTA_BUY + 0.05
+                    self.DELTA_SELL = self.DELTA_SELL - 0.05
+                else:
+                    self.DELTA_BUY = self.DELTA_BUY + 0.05
+        print(count)
+
     def show(self):
-        print(f'Algo name: {self.__name__}')
-        print('\n----- BUY -----\n')
-        print(self.buy[['Last_m']])
-        print('\n----- SELL ----\n')
-        print(self.sell[['Last_m']])
+        print(f"Algo name: {self.__name__}")
+        print("\n----- BUY -----\n")
+        print(self.buy[["Result"]])
+        print("\n----- SELL ----\n")
+        print(self.sell[["Result"]])
+
