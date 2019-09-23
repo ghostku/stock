@@ -6,12 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ALGO2
+
 ## [0.2.0] - 2019-09-23
 
-## Added
+### Added
+
 - ALGO4
+
 ## [0.1.0] - 2019-09-19
 
 ### Added
+
 - README
 - Вывод какого-то подсчета для Алго3 в таблице рекомендаций
