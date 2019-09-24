@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ALGO2
+- ALGO3
+- ALGO5
+- ALGO6
+- ALGO7
 
 ## [0.2.0] - 2019-09-23
 

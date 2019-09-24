@@ -4,14 +4,14 @@ from algo import Algo as AlgoBase
 class Algo(AlgoBase):
     __name__ = "Y_b /Yra_qery"
 
-    def __init__(self, morning_data_file, evening_data_file):
+    def __init__(self, *args):
         self.GAP_SELL_PRICE = 250
         self.GAP_BUY_PRICE = 15
 
         self.DELTA_SELL = 0
         self.DELTA_BUY = 0
 
-        super(Algo, self).__init__(morning_data_file, evening_data_file)
+        super(Algo, self).__init__(*args)
 
     def _buy_filter(self, row):
         if not row["if"]:
