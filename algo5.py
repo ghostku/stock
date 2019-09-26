@@ -2,7 +2,7 @@ from algo import Algo as AlgoBase
 
 
 class Algo(AlgoBase):
-    __name__ = "ST /  PreMarket_old /st_standart/standart_strat_old"
+    __name__ = "ST # PreMarket_old # st_standart # standart_strat_old"
 
     def __init__(self, *args):
         self.GAP_SELL_PRICE = 250

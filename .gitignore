@@ -1,2 +1,4 @@
 *.pyc
 d1/*
+data/evening/*
+data/morning/*

@@ -2,7 +2,7 @@ from algo import Algo as AlgoBase
 
 
 class Algo(AlgoBase):
-    __name__ = "DEEP/Spy"
+    __name__ = "DEEP # Spy"
 
     def __init__(self, *args):
         self.GAP_BUY_2 = -0.1

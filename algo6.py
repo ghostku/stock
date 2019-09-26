@@ -2,7 +2,7 @@ from algo import Algo as AlgoBase
 
 
 class Algo(AlgoBase):
-    __name__ = "B_w /balans_new/balans_new"
+    __name__ = "B_w # balans_new # balans_new"
     AUTO_POSITION = 1
 
     def __init__(self, *args):

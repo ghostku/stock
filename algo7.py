@@ -2,7 +2,7 @@ from algo import Algo as AlgoBase
 
 
 class Algo(AlgoBase):
-    __name__ = "St+ /PreMarket_new_strat_10_37/st_n_standart/standart_strat"
+    __name__ = "St+ # PreMarket_new_strat_10_37 # st_n_standart # standart_strat"
     AUTO_POSITION = 1
 
     def __init__(self, *args):
