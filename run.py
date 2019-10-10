@@ -9,7 +9,7 @@ from algo7 import Algo as Algo7
 from algo4 import Algo as Algo4
 from algo5 import Algo as Algo5
 from errors import IncomingDataError
-from pprint import pprint
+
 
 MORNING_DATA = "./data/morning/*.csv"
 MORNING_DATA_FOLDER = "./data/morning/"
@@ -46,22 +46,29 @@ def main():
     for file in glob.glob(MORNING_DATA):
         try:
             today_m, ext = os.path.splitext(os.path.basename(file))
-            today = today_m
-            today_m = datetime.strptime(today_m, "%d.%m.%Y")
-            yesterday_e = today_m - timedelta(days=1)
-            yesterday_e = yesterday_e.strftime("%d.%m.%Y")
-            yesterday_e = os.path.join(EVENING_DATA_FOLDER, yesterday_e + ext)
-            today_e = os.path.join(EVENING_DATA_FOLDER, today + ext)
         except ValueError:
             raise IncomingDataError(f"Некорректное название файла: {file} не может быть датой")
-
+        today = today_m
+        today_m = datetime.strptime(today_m, "%d.%m.%Y")
+        yesterday = today_m
+        for i in range(10):
+            yesterday = yesterday - timedelta(days=1)
+            yesterday_e = yesterday.strftime("%d.%m.%Y")
+            yesterday_e = os.path.join(EVENING_DATA_FOLDER, yesterday_e + ext)
+            if os.path.exists(yesterday_e):
+                break
+        today_e = os.path.join(EVENING_DATA_FOLDER, today + ext)
         result[today] = one_day(file, yesterday_e, today_e)
-
     result = swap_nested_dict(result)
-    os.makedirs(RES_FOLDER)
+    os.makedirs(RES_FOLDER, exist_ok=True)
     for algo, result in result.items():
         resf = open(os.path.join(RES_FOLDER, algo + ".csv"), mode="w", encoding="utf-8-sig", newline="\n")
-        fp = csv.DictWriter(resf, ["Date", "Buy", "Sell", 'Sum_pos', 'Res', 'Count', 'Cent', 'Mean Price'], dialect="excel-tab", delimiter=";")
+        fp = csv.DictWriter(
+            resf,
+            ["Date", "Buy", "Sell", "Sum_pos", "Res", "Count", "Cent", "Mean Price"],
+            dialect="excel-tab",
+            delimiter=";",
+        )
         fp.writeheader()
         fp.writerows(result)
 
